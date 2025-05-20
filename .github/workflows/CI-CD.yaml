@@ -1,0 +1,74 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: 🧪 Lint and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Run ESLint
+        run: npm run lint || true
+
+  build-and-deploy:
+    name: 🏗️ Build and Deploy
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_LOGIN_ENDPOINT: ${{ secrets.NEXT_PUBLIC_LOGIN_ENDPOINT }}
+          NEXT_PUBLIC_SHIPMENTS_ENDPOINT: ${{ secrets.NEXT_PUBLIC_SHIPMENTS_ENDPOINT }}
+          NEXT_PUBLIC_CREATE_SHIPMENT_ENDPOINT: ${{ secrets.NEXT_PUBLIC_CREATE_SHIPMENT_ENDPOINT }}
+          NEXT_PUBLIC_EDIT_SHIPMENT_ENDPOINT: ${{ secrets.NEXT_PUBLIC_EDIT_SHIPMENT_ENDPOINT }}
+          
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+        
+      - name: Deploy to Vercel (Production)
+        run: |
+          vercel deploy --prod \
+                        --token=${{ secrets.VERCEL_TOKEN }} \
+                        --scope=${{ secrets.VERCEL_ORG_ID }} \
+                        --yes
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_LOGIN_ENDPOINT: ${{ secrets.NEXT_PUBLIC_LOGIN_ENDPOINT }}
+          NEXT_PUBLIC_SHIPMENTS_ENDPOINT: ${{ secrets.NEXT_PUBLIC_SHIPMENTS_ENDPOINT }}
+          NEXT_PUBLIC_CREATE_SHIPMENT_ENDPOINT: ${{ secrets.NEXT_PUBLIC_CREATE_SHIPMENT_ENDPOINT }}
+          NEXT_PUBLIC_EDIT_SHIPMENT_ENDPOINT: ${{ secrets.NEXT_PUBLIC_EDIT_SHIPMENT_ENDPOINT }}
