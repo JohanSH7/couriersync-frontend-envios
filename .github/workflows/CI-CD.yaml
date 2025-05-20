@@ -65,9 +65,9 @@ jobs:
                         --yes
         env:
             VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+            VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
             NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
             NEXT_PUBLIC_LOGIN_ENDPOINT: ${{ secrets.NEXT_PUBLIC_LOGIN_ENDPOINT }}
             NEXT_PUBLIC_SHIPMENTS_ENDPOINT: ${{ secrets.NEXT_PUBLIC_SHIPMENTS_ENDPOINT }}
             NEXT_PUBLIC_CREATE_SHIPMENT_ENDPOINT: ${{ secrets.NEXT_PUBLIC_CREATE_SHIPMENT_ENDPOINT }}
             NEXT_PUBLIC_EDIT_SHIPMENT_ENDPOINT: ${{ secrets.NEXT_PUBLIC_EDIT_SHIPMENT_ENDPOINT }}
-
