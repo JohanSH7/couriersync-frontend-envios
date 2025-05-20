@@ -19,7 +19,7 @@ const UserAvatar: FC<UserAvatarProps> = ({ name, imageUrl, className }) => {
   return (
     <Avatar className={className}>
       {imageUrl && <AvatarImage src={imageUrl || "/placeholder.svg"} alt={name} />}
-      <AvatarFallback>{initials}</AvatarFallback>
+      <AvatarFallback className="bg-blue-600 text-white">{initials}</AvatarFallback>
     </Avatar>
   )
 }

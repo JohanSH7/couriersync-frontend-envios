@@ -3,11 +3,14 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { authService } from "@/services/auth-service"
 
+// Actualizar los tipos para que coincidan con la respuesta real del backend
+type Role = "administrador" | "operador" | "conductor"
+
 type User = {
-  id: string
+  id: string | number
   name: string
   email: string
-  role: "admin" | "operator" | "driver"
+  role: Role
 }
 
 type AuthContextType = {
@@ -20,23 +23,31 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Clave para almacenar los datos del usuario en localStorage
+const USER_STORAGE_KEY = "auth_user"
+const TOKEN_STORAGE_KEY = "auth_token"
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Esta función se ejecuta una sola vez al cargar la aplicación
   useEffect(() => {
-    // Check if user is already logged in
-    const checkAuth = async () => {
+    // Recuperar el usuario desde localStorage al iniciar
+    const checkAuth = () => {
       try {
-        const token = localStorage.getItem("auth_token")
-        if (token) {
-          const userData = await authService.getCurrentUser()
+        const token = localStorage.getItem(TOKEN_STORAGE_KEY)
+        const storedUser = localStorage.getItem(USER_STORAGE_KEY)
+
+        if (token && storedUser) {
+          const userData = JSON.parse(storedUser) as User
           setUser(userData)
         }
       } catch (error) {
-        console.error("Authentication error:", error)
-        // Limpiar token si hay un error de autenticación
-        localStorage.removeItem("auth_token")
+        console.error("Error recuperando datos de autenticación:", error)
+        // Limpiar datos si hay un error
+        localStorage.removeItem(TOKEN_STORAGE_KEY)
+        localStorage.removeItem(USER_STORAGE_KEY)
       } finally {
         setIsLoading(false)
       }
@@ -55,7 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Respuesta de autenticación inválida")
       }
 
-      localStorage.setItem("auth_token", token)
+      // Guardar el token y el usuario en localStorage
+      localStorage.setItem(TOKEN_STORAGE_KEY, token)
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+
+      // Actualizar el estado
       setUser(user)
     } catch (error) {
       console.error("Login error:", error)
@@ -66,7 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
-    localStorage.removeItem("auth_token")
+    // Limpiar tanto el token como los datos del usuario
+    localStorage.removeItem(TOKEN_STORAGE_KEY)
+    localStorage.removeItem(USER_STORAGE_KEY)
     setUser(null)
   }
 

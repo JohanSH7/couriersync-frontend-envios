@@ -3,6 +3,7 @@
 import type React from "react"
 
 import type { FC, ReactNode } from "react"
+import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
@@ -17,6 +18,7 @@ interface FormFieldProps {
   hasError?: boolean
   errorMessage?: string
   rightElement?: ReactNode
+  name: string
 }
 
 const FormField: FC<FormFieldProps> = ({
@@ -30,26 +32,37 @@ const FormField: FC<FormFieldProps> = ({
   hasError = false,
   errorMessage,
   rightElement,
+  name,
 }) => {
+  const [isFocused, setIsFocused] = useState(false)
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label htmlFor={id} className={hasError ? "text-red-500 font-medium" : ""}>
+        <Label
+          htmlFor={id}
+          className={`app-label ${isFocused ? "app-label-focus" : ""} ${hasError ? "text-destructive" : ""}`}
+        >
           {label}
         </Label>
         {rightElement}
       </div>
       <Input
         id={id}
+        name={name}
         type={type}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         required={required}
-        className={hasError ? "border-red-500" : ""}
+        className={`app-transition ${
+          hasError ? "border-destructive" : isFocused ? "border-primary ring-2 ring-primary/20" : ""
+        }`}
         aria-invalid={hasError ? "true" : "false"}
       />
-      {hasError && errorMessage && <p className="text-xs text-red-500">{errorMessage}</p>}
+      {hasError && errorMessage && <p className="text-destructive text-xs">{errorMessage}</p>}
     </div>
   )
 }

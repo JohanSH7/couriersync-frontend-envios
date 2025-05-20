@@ -17,12 +17,12 @@ const LoginTemplate: FC<LoginTemplateProps> = ({ children, title, subtitle, back
         title={title}
         subtitle={subtitle}
         backgroundImage={backgroundImage}
-        backgroundColor={backgroundColor}
+        backgroundColor={backgroundColor || "app-orange-bg"}
       />
 
       {/* Lado derecho - Contenido del formulario */}
-      <div className="flex w-full items-center justify-center bg-white p-8 lg:w-1/2">
-        <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-sm">{children}</div>
+      <div className="flex w-full items-center justify-center bg-background p-8 lg:w-1/2">
+        <div className="w-full max-w-md space-y-8">{children}</div>
       </div>
     </div>
   )

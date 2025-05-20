@@ -11,12 +11,20 @@ export default function OperatorDashboard() {
   const router = useRouter()
 
   useEffect(() => {
+    console.log("OperatorDashboard - Verificando autenticación:", { isAuthenticated, userRole: user?.role })
+
     if (!isAuthenticated) {
+      console.log("No autenticado, redirigiendo a login")
       router.push("/")
-    } else if (user?.role !== "operator") {
+    } else if (user?.role !== "operador") {
+      console.log("Rol incorrecto, redirigiendo a login")
       router.push("/")
     }
   }, [isAuthenticated, router, user])
+
+  if (!isAuthenticated || user?.role !== "operador") {
+    return null
+  }
 
   return (
     <DashboardLayout>

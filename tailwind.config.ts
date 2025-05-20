@@ -1,17 +1,15 @@
 import type { Config } from "tailwindcss"
-import animate from "tailwindcss-animate"
+import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
   darkMode: "class",
-  content: {
-    files: [
-      "./pages/**/*.{ts,tsx}",
-      "./components/**/*.{ts,tsx}",
-      "./app/**/*.{ts,tsx}",
-      "./src/**/*.{ts,tsx}",
-      "*.{js,ts,jsx,tsx,mdx}",
-    ],
-  },
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx,js,jsx,mdx}",
+  ],
+  prefix: "",
   theme: {
     container: {
       center: true,
@@ -55,6 +53,19 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Colores personalizados para la aplicación
+        "app-orange": {
+          DEFAULT: "hsl(24, 100%, 50%)",
+          foreground: "hsl(0, 0%, 100%)",
+          muted: "hsl(24, 100%, 95%)",
+          hover: "hsl(24, 100%, 45%)",
+        },
+        "app-dark": {
+          DEFAULT: "hsl(222.2, 84%, 4.9%)",
+          foreground: "hsl(210, 40%, 98%)",
+          muted: "hsl(217.2, 32.6%, 17.5%)",
+          hover: "hsl(222.2, 84%, 9%)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -77,7 +88,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [animate],
-}
+  plugins: [tailwindcssAnimate],
+} satisfies Config
 
 export default config

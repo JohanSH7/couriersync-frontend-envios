@@ -11,12 +11,20 @@ export default function DriverDashboard() {
   const router = useRouter()
 
   useEffect(() => {
+    console.log("DriverDashboard - Verificando autenticación:", { isAuthenticated, userRole: user?.role })
+
     if (!isAuthenticated) {
+      console.log("No autenticado, redirigiendo a login")
       router.push("/")
-    } else if (user?.role !== "driver") {
+    } else if (user?.role !== "conductor") {
+      console.log("Rol incorrecto, redirigiendo a login")
       router.push("/")
     }
   }, [isAuthenticated, router, user])
+
+  if (!isAuthenticated || user?.role !== "conductor") {
+    return null
+  }
 
   return (
     <DashboardLayout>

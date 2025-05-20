@@ -20,8 +20,8 @@ const NavLink: FC<NavLinkProps> = ({ href, icon, children, className }) => {
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
-        isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm app-transition",
+        isActive ? "bg-gray-800 text-white font-medium" : "text-gray-400 hover:text-white hover:bg-gray-800/70",
         className,
       )}
     >

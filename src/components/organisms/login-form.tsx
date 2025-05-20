@@ -5,10 +5,14 @@ import { type FC, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
-import FormField from "@/components/molecules/form-field"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { CheckCircle2 } from "lucide-react"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface LoginFormProps {
   onSuccess?: () => void
@@ -22,9 +26,9 @@ const LoginForm: FC<LoginFormProps> = ({ onSuccess }) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [focusedField, setFocusedField] = useState<string | null>(null)
   const { login } = useAuth()
 
-  // Función para validar el formato del email
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email)
@@ -36,7 +40,6 @@ const LoginForm: FC<LoginFormProps> = ({ onSuccess }) => {
     setPasswordError(null)
     setError(null)
 
-    // Validación de campos vacíos
     if (!email) {
       setEmailError('El campo "Correo electrónico" es obligatorio.')
       isValid = false
@@ -56,39 +59,34 @@ const LoginForm: FC<LoginFormProps> = ({ onSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     setIsSubmitting(true)
+    setError(null)
 
     try {
       await login(email, password)
-      // Mostrar modal de éxito antes de redireccionar
+
       setShowSuccessModal(true)
-      // Esperar un momento antes de ejecutar onSuccess (que redireccionará)
+
       setTimeout(() => {
-        if (onSuccess) {
-          onSuccess()
-        }
+        if (onSuccess) onSuccess()
       }, 1500)
     } catch (err: unknown) {
-      // Manejo de diferentes tipos de errores
+      console.log("Login error:", err)
+
       if (typeof err === "object" && err !== null) {
-        interface ErrorResponse {
+        const error = err as {
           response?: {
-            status?: number;
-            data?: {
-              message?: string;
-            };
-          };
-          request?: unknown;
-          message?: string;
+            status?: number
+            data?: { message?: string }
+          }
+          request?: unknown
+          message?: string
         }
-        const errorObj = err as ErrorResponse;
-        if (errorObj.response) {
-          // Error de respuesta del servidor (401, 500, etc.)
-          switch (errorObj.response.status) {
+
+        if (error.response) {
+          switch (error.response.status) {
             case 401:
               setError("Credenciales inválidas. Por favor, verifica tu correo y contraseña")
               setEmailError("Verifica este campo")
@@ -104,19 +102,27 @@ const LoginForm: FC<LoginFormProps> = ({ onSuccess }) => {
               setError("Error en el servidor. Por favor, intenta más tarde")
               break
             default:
-              setError(errorObj.response.data?.message || "Error al iniciar sesión")
+              if (error.response.data?.message === "User not found") {
+                setError("Usuario no encontrado")
+              } else if (error.response.data?.message === "Invalid password") {
+                setError("Contraseña incorrecta")
+              } else {
+                setError(error.response.data?.message || "Error al iniciar sesión")
+              }
           }
-        } else if (errorObj.request) {
-          // Error de red o CORS (no se recibió respuesta)
+        } else if (error.request) {
           setError("No se pudo conectar con el servidor. Verifica tu conexión a internet")
         } else {
-          // Error inesperado
-          setError(`Error inesperado: ${errorObj.message || "Desconocido"}`)
+          if (error.message === "User not found") {
+            setError("Usuario no encontrado")
+          } else if (error.message === "Invalid password") {
+            setError("Contraseña incorrecta")
+          } else {
+            setError(error.message || "Error al iniciar sesión")
+          }
         }
-        console.error("Login error:", err)
       } else {
-        setError("Error inesperado")
-        console.error("Login error:", err)
+        setError("Ocurrió un error desconocido al iniciar sesión")
       }
     } finally {
       setIsSubmitting(false)
@@ -125,7 +131,14 @@ const LoginForm: FC<LoginFormProps> = ({ onSuccess }) => {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-foreground">¡Bienvenido!</h2>
+        <p className="mt-2 text-muted-foreground">
+          Ingresa tus datos para acceder a tu cuenta
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6 mt-6">
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -133,48 +146,94 @@ const LoginForm: FC<LoginFormProps> = ({ onSuccess }) => {
           </Alert>
         )}
 
-        <FormField
-          id="email"
-          label="Correo electrónico"
-          type="email"
-          placeholder="correo@ejemplo.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          hasError={!!emailError}
-          errorMessage={emailError || ""}
-        />
+        <div className="space-y-2">
+          <label
+            htmlFor="email"
+            className={`app-label ${
+              focusedField === "email" ? "app-label-focus" : ""
+            }`}
+          >
+            Correo electrónico
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="correo@ejemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onFocus={() => setFocusedField("email")}
+            onBlur={() => setFocusedField(null)}
+            required
+            className={`app-input app-focus-ring ${
+              emailError
+                ? "border-destructive"
+                : focusedField === "email"
+                ? "border-primary ring-2 ring-primary/20"
+                : ""
+            }`}
+          />
+          {emailError && <p className="text-destructive text-xs">{emailError}</p>}
+        </div>
 
-        <FormField
-          id="password"
-          label="Contraseña"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          hasError={!!passwordError}
-          errorMessage={passwordError || ""}
-          rightElement={
-            <Button variant="link" className="p-0 h-auto text-xs text-blue-600">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="password"
+              className={`app-label ${
+                focusedField === "password" ? "app-label-focus" : ""
+              }`}
+            >
+              Contraseña
+            </label>
+            <Button
+              variant="link"
+              className="p-0 h-auto text-xs text-primary hover:text-primary/90"
+            >
               ¿Olvidaste tu contraseña?
             </Button>
-          }
-        />
+          </div>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onFocus={() => setFocusedField("password")}
+            onBlur={() => setFocusedField(null)}
+            required
+            className={`app-input app-focus-ring ${
+              passwordError
+                ? "border-destructive"
+                : focusedField === "password"
+                ? "border-primary ring-2 ring-primary/20"
+                : ""
+            }`}
+          />
+          {passwordError && (
+            <p className="text-destructive text-xs">{passwordError}</p>
+          )}
+        </div>
 
-        <Button type="submit" className="w-full bg-green-700 hover:bg-green-800" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full app-button-primary"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Iniciando sesión..." : "INGRESAR"}
         </Button>
       </form>
 
-      {/* Modal de éxito */}
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-green-600">
+            <DialogTitle className="flex items-center gap-2 text-primary">
               <CheckCircle2 className="h-6 w-6" />
               Inicio de sesión exitoso
             </DialogTitle>
-            <DialogDescription>Bienvenido al sistema. Serás redirigido en un momento...</DialogDescription>
+            <DialogDescription>
+              Bienvenido al sistema. Serás redirigido en un momento...
+            </DialogDescription>
           </DialogHeader>
         </DialogContent>
       </Dialog>

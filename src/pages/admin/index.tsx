@@ -11,12 +11,20 @@ export default function AdminDashboard() {
   const router = useRouter()
 
   useEffect(() => {
+    console.log("AdminDashboard - Verificando autenticación:", { isAuthenticated, userRole: user?.role })
+
     if (!isAuthenticated) {
+      console.log("No autenticado, redirigiendo a login")
       router.push("/")
-    } else if (user?.role !== "admin") {
+    } else if (user?.role !== "administrador") {
+      console.log("Rol incorrecto, redirigiendo a login")
       router.push("/")
     }
   }, [isAuthenticated, router, user])
+
+  if (!isAuthenticated || user?.role !== "administrador") {
+    return null
+  }
 
   return (
     <DashboardLayout>

@@ -8,7 +8,7 @@ interface LoginHeroProps {
   backgroundColor?: string
 }
 
-const LoginHero: FC<LoginHeroProps> = ({ title, subtitle, backgroundImage, backgroundColor = "bg-orange-500" }) => {
+const LoginHero: FC<LoginHeroProps> = ({ title, subtitle, backgroundImage, backgroundColor = "bg-white" }) => {
   return (
     <div className={`relative hidden w-1/2 flex-col justify-between p-10 lg:flex ${backgroundColor}`}>
       {/* Imagen de fondo */}
