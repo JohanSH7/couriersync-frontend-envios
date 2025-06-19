@@ -1,0 +1,36 @@
+/* This file contains the CSS styles specific to the admin summary page, defining the layout, colors, and typography used in the component. */
+
+.admin-summary-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.admin-summary-header {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: hsl(var(--primary));
+}
+
+.admin-summary-card {
+  background-color: hsl(var(--card-background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-summary-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.admin-summary-card-content {
+  font-size: 1rem;
+  color: hsl(var(--muted-foreground));
+}

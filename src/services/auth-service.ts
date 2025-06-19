@@ -1,71 +1,95 @@
-import { apiClient } from "./api-client"
+import { apiClient } from "./api-client";
+import axios from "axios";
 
 // Tipo para los roles de usuario
-type Role = "administrador" | "operador" | "conductor"
+type Role = "administrador" | "operador" | "conductor";
 
 // Tipo para la respuesta del login
 type LoginResponse = {
-  id: number
-  name: string
-  email: string
-  role: string
-  message: string
-  success: boolean
-  token: string
-}
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  message: string;
+  success: boolean;
+  token: string;
+  refreshToken: string;
+};
 
 export const authService = {
   async login(
     email: string,
-    password: string,
+    password: string
   ): Promise<{
-    token: string
-    user: { id: string | number; name: string; email: string; role: Role }
+    token: string;
+    refreshToken: string;
+    user: { id: string | number; name: string; email: string; role: Role };
   }> {
     try {
-      console.log("Enviando solicitud de login a:", process.env.NEXT_PUBLIC_LOGIN_ENDPOINT)
-
       const response = await apiClient.post<LoginResponse>(
         process.env.NEXT_PUBLIC_LOGIN_ENDPOINT || "/api/auth/login",
-        { email, password },
-      )
+        { email, password }
+      );
 
       // Verificar si la respuesta fue exitosa
       if (!response.data.success) {
-        throw new Error(response.data.message || "Error de autenticación")
+        throw new Error(response.data.message || "Usuario o contraseña incorrectos.");
       }
 
-      // Mapear el rol del backend al formato que espera nuestra aplicación
-      const mappedRole = mapRoleToAppRole(response.data.role)
+      const mappedRole = mapRoleToAppRole(response.data.role);
 
-      // Transformar la respuesta al formato que espera nuestro contexto de autenticación
+      // Guardar el token en localStorage
+      localStorage.setItem("auth_token", response.data.token);
+
+      // Logs para depuración
+      console.log("Token guardado después de iniciar sesión:", localStorage.getItem("auth_token"));
+
       return {
         token: response.data.token,
+        refreshToken: response.data.refreshToken,
         user: {
           id: response.data.id,
           name: response.data.name,
           email: response.data.email,
           role: mappedRole,
         },
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`Error en el login: ${error.message}`);
+      } else {
+        throw new Error("Error en el login.");
       }
-    } catch (error) {
-      console.error("Login error:", error)
-      throw error // Propagar el error para manejarlo en el componente
     }
   },
-}
+
+  async refreshToken(refreshToken: string): Promise<{ token: string }> {
+    const response = await axios.post<{ token: string }>(
+      process.env.NEXT_PUBLIC_REFRESH_TOKEN_ENDPOINT || "/api/auth/refresh-token",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${refreshToken}`,
+        },
+      }
+    );
+    if (!response.data || typeof response.data.token !== "string") {
+      throw new Error("La respuesta del servidor no contiene un token válido.");
+    }
+    return response.data;
+  },
+};
 
 // Función para mapear los roles del backend a los roles que usa nuestra aplicación
 function mapRoleToAppRole(backendRole: string): Role {
   switch (backendRole?.toLowerCase()) {
     case "administrador":
-      return "administrador"
+      return "administrador";
     case "operador":
-      return "operador"
+      return "operador";
     case "conductor":
-      return "conductor"
+      return "conductor";
     default:
-      console.warn(`Rol desconocido: ${backendRole}, usando 'operador' por defecto`)
-      return "operador"
+      return "operador";
   }
 }

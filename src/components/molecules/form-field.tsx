@@ -34,10 +34,10 @@ const FormField: FC<FormFieldProps> = ({
   rightElement,
   name,
 }) => {
-  const [isFocused, setIsFocused] = useState(false)
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1"> {/* Ajustar espacio entre elementos */}
       <div className="flex items-center justify-between">
         <Label
           htmlFor={id}
@@ -57,14 +57,13 @@ const FormField: FC<FormFieldProps> = ({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         required={required}
-        className={`app-transition ${
-          hasError ? "border-destructive" : isFocused ? "border-primary ring-2 ring-primary/20" : ""
-        }`}
-        aria-invalid={hasError ? "true" : "false"}
+        className={`
+          ${hasError ? "border-destructive" : isFocused ? "border-primary ring-2 ring-primary/20" : ""}
+        `}
       />
       {hasError && errorMessage && <p className="text-destructive text-xs">{errorMessage}</p>}
     </div>
-  )
+  );
 }
 
 export default FormField

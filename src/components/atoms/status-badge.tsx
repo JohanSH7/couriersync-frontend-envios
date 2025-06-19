@@ -10,11 +10,10 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
     switch (status.toLowerCase()) {
       case "pendiente":
         return "bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full font-medium text-center inline-block min-w-[100px]"
-      case "en bodega":
-      case "bodega":
-        return "bg-blue-500 text-white px-3 py-1 rounded-full font-medium text-center inline-block min-w-[100px]"
       case "en tránsito":
       case "en transito":
+      case "in transit":
+      case "En transito":
       case "transito":
         return "bg-primary text-primary-foreground px-3 py-1 rounded-full font-medium text-center inline-block min-w-[100px]"
       case "entregado":

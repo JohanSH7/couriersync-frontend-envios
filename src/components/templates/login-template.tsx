@@ -11,18 +11,20 @@ interface LoginTemplateProps {
 
 const LoginTemplate: FC<LoginTemplateProps> = ({ children, title, subtitle, backgroundImage, backgroundColor }) => {
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-row h-screen">
       {/* Lado izquierdo - Hero */}
-      <LoginHero
-        title={title}
-        subtitle={subtitle}
-        backgroundImage={backgroundImage}
-        backgroundColor={backgroundColor || "app-orange-bg"}
-      />
+      <div className="app-hero-container">
+        <LoginHero
+          title={title}
+          subtitle={subtitle}
+          backgroundImage={backgroundImage}
+          backgroundColor={backgroundColor || "hsl(var(--primary))"}
+        />
+      </div>
 
-      {/* Lado derecho - Contenido del formulario */}
-      <div className="flex w-full items-center justify-center bg-background p-8 lg:w-1/2">
-        <div className="w-full max-w-md space-y-8">{children}</div>
+      {/* Lado derecho - Formulario */}
+      <div className="app-form-container">
+        <div className="w-full max-w-sm space-y-6">{children}</div>
       </div>
     </div>
   )

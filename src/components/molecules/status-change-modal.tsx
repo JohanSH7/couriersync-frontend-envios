@@ -1,109 +1,87 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { AlertCircle } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import type { StatusChangeModalProps } from "@/types/shipment"
+import { ShipmentStatus } from "@/services/shipment-service";
+import { shipmentService } from "@/services/shipment-service";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const StatusChangeModal = ({ isOpen, onClose, onConfirm, shipmentIds }: StatusChangeModalProps) => {
-  const [selectedStatus, setSelectedStatus] = useState<string>("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isFocused, setIsFocused] = useState(false)
+interface StatusChangeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  shipmentIds: number[];
+  onConfirm: (status: ShipmentStatus) => void | Promise<void>; // Callback para actualizar la lista de envíos
+}
+
+const StatusChangeModal: React.FC<StatusChangeModalProps> = ({ isOpen, onClose, shipmentIds, onConfirm }) => {
+  const [selectedStatus, setSelectedStatus] = useState<ShipmentStatus | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleConfirm = async () => {
     if (!selectedStatus) {
-      setError("Por favor selecciona un estado")
-      return
+      alert("Por favor, selecciona un estado.");
+      return;
     }
 
-    setError(null)
-    setIsSubmitting(true)
-
+    setIsSubmitting(true);
     try {
-      await onConfirm(selectedStatus)
-      onClose()
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || "Error al cambiar el estado")
-      } else {
-        setError("Error al cambiar el estado")
+      for (const id of shipmentIds) {
+        if (selectedStatus === "en transito") {
+          await shipmentService.updateStatusTransit(id);
+        } else if (selectedStatus === "entregado") {
+          await shipmentService.updateStatusDelivered(id);
+        }
       }
+      onConfirm(selectedStatus);
+      onClose();
+    } catch (error) {
+      console.error("Error al cambiar el estado:", error);
+      alert("No se pudo cambiar el estado. Inténtalo de nuevo.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Cambiar Estado</DialogTitle>
+          <DialogTitle>Cambiar Estado</DialogTitle>
         </DialogHeader>
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="status" className={`app-transition ${isFocused ? "app-label-focus" : "text-foreground"}`}>
-              Nuevo Estado
-            </Label>
-            <Select
-              value={selectedStatus}
-              onValueChange={setSelectedStatus}
-              onOpenChange={(open) => setIsFocused(open)}
-            >
-              <SelectTrigger
-                id="status"
-                className={`app-transition ${isFocused ? "border-primary ring-2 ring-primary/20" : "border-input"}`}
-              >
-                <SelectValue placeholder="Selecciona un estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pendiente">Pendiente</SelectItem>
-                <SelectItem value="en bodega">En Bodega</SelectItem>
-                <SelectItem value="en tránsito">En Tránsito</SelectItem>
-                <SelectItem value="entregado">Entregado</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="p-4">
+          <p className="mb-4">Selecciona el nuevo estado para los envíos seleccionados:</p>
+          <div className="flex flex-col gap-2">
+            {["EN_TRANSITO", "ENTREGADO"].map((status) => (
+              <label key={status} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="shipmentStatus"
+                  value={status}
+                  checked={selectedStatus === status}
+                  onChange={() => setSelectedStatus(status as ShipmentStatus)}
+                />
+                {status === "EN_TRANSITO" ? "En tránsito" : "Entregado"}
+              </label>
+            ))}
           </div>
-
-          <p className="text-sm text-muted-foreground">
-            {shipmentIds.length === 1
-              ? "Se cambiará el estado del envío seleccionado."
-              : `Se cambiará el estado de ${shipmentIds.length} envíos seleccionados.`}
-          </p>
         </div>
-
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="border-input hover:bg-accent hover:text-accent-foreground app-transition"
-          >
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={isSubmitting}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground app-transition app-hover-scale"
-          >
-            {isSubmitting ? "Guardando..." : "Guardar Cambios"}
+          <Button onClick={handleConfirm} disabled={!selectedStatus || isSubmitting}>
+            {isSubmitting ? "Guardando..." : "Confirmar"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default StatusChangeModal
+export default StatusChangeModal;

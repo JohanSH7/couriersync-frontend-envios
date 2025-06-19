@@ -1,14 +1,35 @@
 export interface Shipment {
-  id: number
-  origin: string
-  destination: string
-  client: string
-  weight: number
-  priority: string
-  shippingDate: string
-  deliveryDate: string
-  registrationDate: string
-  status: string
+  id: number;
+  status: string;
+  destination: string;
+  weight: number;
+  priority: string;
+  origin?: string;
+  client?: string;
+  shippingDate?: string;
+  deliveryDate?: string;
+  newOriginAddress?: {
+    city: string;
+    address: string;
+  };
+  newDestinationAddress?: {
+    city: string;
+    address: string;
+  };
+  newClient?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+}
+
+export interface ShipmentData {
+  id: number;
+  origin: string;
+  destination: string;
+  // Add the status property
+  status?: "pending" | "in_transit" | "delivered" | "cancelled";
+  // ...other properties
 }
 
 export interface ShipmentTableProps {

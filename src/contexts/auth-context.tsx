@@ -1,111 +1,97 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { authService } from "@/services/auth-service"
+import { createContext, useContext, useState, ReactNode, useMemo } from "react";
+import { authService } from "@/services/auth-service";
 
-// Actualizar los tipos para que coincidan con la respuesta real del backend
-type Role = "administrador" | "operador" | "conductor"
+type Role = "administrador" | "operador" | "conductor";
 
 type User = {
-  id: string | number
-  name: string
-  email: string
-  role: Role
-}
+  id: string | number;
+  name: string;
+  email: string;
+  role: Role;
+};
 
 type AuthContextType = {
-  user: User | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => void
-}
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  refreshAccessToken: () => Promise<string>;
+};
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Clave para almacenar los datos del usuario en localStorage
-const USER_STORAGE_KEY = "auth_user"
-const TOKEN_STORAGE_KEY = "auth_token"
+const USER_STORAGE_KEY = "auth_user";
+const TOKEN_STORAGE_KEY = "auth_token";
+const REFRESH_TOKEN_STORAGE_KEY = "refresh_token";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Esta función se ejecuta una sola vez al cargar la aplicación
-  useEffect(() => {
-    // Recuperar el usuario desde localStorage al iniciar
-    const checkAuth = () => {
-      try {
-        const token = localStorage.getItem(TOKEN_STORAGE_KEY)
-        const storedUser = localStorage.getItem(USER_STORAGE_KEY)
-
-        if (token && storedUser) {
-          const userData = JSON.parse(storedUser) as User
-          setUser(userData)
-        }
-      } catch (error) {
-        console.error("Error recuperando datos de autenticación:", error)
-        // Limpiar datos si hay un error
-        localStorage.removeItem(TOKEN_STORAGE_KEY)
-        localStorage.removeItem(USER_STORAGE_KEY)
-      } finally {
-        setIsLoading(false)
-      }
+  const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    if (!refreshToken) {
+      throw new Error("No se encontró el refresh token en localStorage.");
     }
 
-    checkAuth()
-  }, [])
+    try {
+      const { token } = await authService.refreshToken(refreshToken);
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      return token;
+    } catch (error) {
+      console.error("Error al renovar el token:", error);
+      logout();
+      throw error;
+    }
+  };
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const { token, user } = await authService.login(email, password)
+      const { token, refreshToken, user } = await authService.login(email, password);
 
-      // Verificar que el token y los datos del usuario sean válidos
-      if (!token || !user || !user.id || !user.role) {
-        throw new Error("Respuesta de autenticación inválida")
-      }
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 
-      // Guardar el token y el usuario en localStorage
-      localStorage.setItem(TOKEN_STORAGE_KEY, token)
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
-
-      // Actualizar el estado
-      setUser(user)
+      setUser(user);
     } catch (error) {
-      console.error("Login error:", error)
-      throw error // Propagar el error para manejarlo en el componente
+      console.error("Login error:", error);
+      throw error;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const logout = () => {
-    // Limpiar tanto el token como los datos del usuario
-    localStorage.removeItem(TOKEN_STORAGE_KEY)
-    localStorage.removeItem(USER_STORAGE_KEY)
-    setUser(null)
-  }
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+    setUser(null);
+  };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  )
+  const value = useMemo(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      login,
+      logout,
+      refreshAccessToken,
+    }),
+    [user, isLoading]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
-}
+  return context;
+};

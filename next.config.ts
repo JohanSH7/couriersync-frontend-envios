@@ -1,10 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true, // Habilita el modo estricto de React para detectar problemas potenciales.
-  swcMinify: true, // Usa el minificador SWC para optimizar el código.
-  experimental: {
-    turbo: true, // Activa características experimentales como Turbo Mode.
-  },
+  reactStrictMode: true, // Habilita el modo estricto de React.
   eslint: {
     ignoreDuringBuilds: true, // Ignora errores de ESLint durante la construcción.
   },
