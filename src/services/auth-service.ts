@@ -41,9 +41,6 @@ export const authService = {
       // Guardar el token en localStorage
       localStorage.setItem("auth_token", response.data.token);
 
-      // Logs para depuración
-      console.log("Token guardado después de iniciar sesión:", localStorage.getItem("auth_token"));
-
       return {
         token: response.data.token,
         refreshToken: response.data.refreshToken,

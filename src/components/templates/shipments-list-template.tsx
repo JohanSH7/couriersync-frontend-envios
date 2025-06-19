@@ -142,12 +142,10 @@ const ShipmentsListTemplate = ({
           onClick={async () => {
             if (selectedShipments.length === 1) {
               const shipmentId = selectedShipments[0];
-              console.log(`Redirigiendo al envío con ID: ${shipmentId}`);
 
               try {
                 // Enviar solicitud al backend para obtener los datos del envío
-                const shipmentData = await shipmentService.getShipmentById(shipmentId);
-                console.log("Datos del envío obtenidos:", shipmentData);
+                await shipmentService.getShipmentById(shipmentId);
 
                 // Redirigir a la página de edición
                 router.push(`/shipments/edit/${shipmentId}`);

@@ -55,7 +55,6 @@ apiClient.interceptors.response.use(
         const data = refreshResponse.data as { token: string };
         const newToken = data.token;
         if (newToken) {
-          console.log("Token renovado correctamente:", newToken);
           localStorage.setItem("auth_token", newToken);
           apiClient.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
           originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
